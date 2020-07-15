@@ -23,10 +23,11 @@ def process_flags(argv):
 
 FLAGS:
 --help    | -h -- Print this message and exit.
---cleanup | -c -- Clear the vault and exit.
+--count   | -c -- Simply count up all the chat/channel's documents.
 --names   | -n -- Iterate through the chat/channel and print file names with no downloads.
 --nocolor -- Disable colored output.
---count   -- Simply count up all the chat/channel's documents.
+--cleanup -- Clear the vault and exit.
+
 
 GETTING AN API DATA:
 1. Go to <my.telegram.org> ang log in;
