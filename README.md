@@ -36,6 +36,7 @@ You can make the script executable by:
 * `termcolor`
 
 ## TODO:
+0. Add modes to download messages and media
 1. Unarchive downloaded archives
 2. Code a bot for remote downloads
 3. Optimize it somehow
