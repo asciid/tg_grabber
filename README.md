@@ -41,3 +41,4 @@ You can make the script executable by:
 2. Code a bot for remote downloads
 3. Optimize it somehow
 4. Pack some binaries
+5. Make some profiles to avoid getting private API data 
