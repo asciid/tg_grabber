@@ -1,21 +1,45 @@
 #!/usr/bin/env python3
-from pyrogram import Client, errors
+from pyrogram  import Client, errors
 from termcolor import colored
-from time import localtime, strftime
+from time      import localtime, strftime
 from mimetypes import guess_extension
 import sys
 import os
-import re
 
 """
                 [   TODO   ]
-[ 1. DIFFERENT DATA TYPES                   ]
 [ 2. CODE PRETTIFYING                       ]
 [ 3. REGISTERED PROFILES // PROFILE FARMING ]
 """
 
-get_names = False
-count     = False
+help_msg = """USAGE: ./download.py channel(s) DATA_TYPES [OPTION(S)]
+
+OPTIONS:
+[--help    | -h] => Print this message and exit.
+[--cleanup | -c] => Clear the vault and exit.
+[--names   | -n] => Iterate through the chat/channel and print file names with no downloads.
+[--nocolor     ] => Disable colored output.
+[--count       ] => Simply count up all the chat/channel's documents.
+
+DATA TYPES:
+Grabber can download any of following types of data. You can combine them by combining flags.
+[--all        | -A] => Download all the types of data
+[--animation  | -m] => Animations
+[--audio      | -a] => Audio
+[--documents  | -d] => Files (in Telegram other types of docs that are not an audio considered as file)
+[--photo      | -p] => Images
+[--stickers   | -s] => Stickers
+[--text       | -t] => Plain text. Includes media captions and simple messages
+[--video      | -v] => Videos
+[--videonotes | -N] => Video messages
+[--voice      | -V] => Voice messages
+
+GETTING AN API DATA:
+1. Go to <my.telegram.org> ang log in;
+2. Register new app in "API development tools" section;
+3. Copy values from first and second fields;
+
+ISSUES: <github.com/asciid/tg_grabber/issues>"""
 
 media_types = {
 	'animation'   : False,
@@ -29,7 +53,7 @@ media_types = {
 	'voice'       : False
 }
 
-def auth():
+def auth            ():
 	if os.path.exists('grabber.ini'):
 		return Client(session_name='grabber', config_file='grabber.ini')
 	else:
@@ -45,8 +69,7 @@ def auth():
 
 		print('grabber.ini config file has been created.')
 		return Client(session_name='grabber', api_id=api_id, api_hash=api_hash)
-
-def get_channels(argv):
+def get_channels    (argv):
 	channels = []
 
 	for argument in argv:
@@ -58,45 +81,24 @@ def get_channels(argv):
 		sys.exit('Error: Chat or channel to download is omitting.\nRun ./download.py -h for some info.')
 	else:
 		return channels
-
-def process_flags(argv):
+def process_flags   (argv):
 
 	global media_types
 	global count
 	global get_names
-
-	if '--help' in argv or '-h' in argv:
-		help_msg = '''USAGE: ./download.py channel(s) [FLAGS]
-
-FLAGS:
---help    | -h -- Print this message and exit.
---cleanup | -c -- Clear the vault and exit.
---names   | -n -- Iterate through the chat/channel and print file names with no downloads.
---nocolor -- Disable colored output.
---count   -- Simply count up all the chat/channel's documents.
-
-GETTING AN API DATA:
-1. Go to <my.telegram.org> ang log in;
-2. Register new app in "API development tools" section;
-3. Copy values from first and second fields;
-
-ISSUES: <github.com/asciid/tg_grabber/issues>'''
-
-		sys.exit(help_msg)
-
+	global help_msg
+	choise = False
 
 	if '--cleanup' in argv:
 		confirmation = input('This action wipes all stored data. Are you sure? [y/n]: ')
 		if confirmation.lower() == 'y': os.system('rm -rf vault/ amount.txt output.txt')
 
 		sys.exit()
-
-
 	if '--nocolor' in argv: colored = lambda a, b, **c: a
-
+	if '-h' in argv or '--help'       in argv: sys.exit(help_msg)
 	if '-c' in argv or '--count'      in argv: media_types['count'      ] = True
 	if '-n' in argv or '--names'      in argv: media_types['get_names'  ] = True
-	if '-m' in argv or '--animation'  in argv: media_types['animation ' ] = True
+	if '-m' in argv or '--animation'  in argv: media_types['animation'  ] = True
 	if '-a' in argv or '--audio'      in argv: media_types['audio'      ] = True
 	if '-d' in argv or '--documents'  in argv: media_types['document'   ] = True
 	if '-p' in argv or '--photo'      in argv: media_types['photo'      ] = True
@@ -106,8 +108,9 @@ ISSUES: <github.com/asciid/tg_grabber/issues>'''
 	if '-N' in argv or '--videonotes' in argv: media_types['video_note' ] = True
 	if '-V' in argv or '--voice'      in argv: media_types['voice'      ] = True
 	if '-A' in argv or '--all'        in argv:
-		for media_type in media_types: media_type = True
+		for media_type in media_types: media_types[media_type] = True
 
+	check_choise(media_types)
 def process_folders (channel_name):
 	global media_types
 
@@ -118,7 +121,7 @@ def process_folders (channel_name):
 
 	os.chdir(path)
 
-	for media_type in ('document', 'photo', 'voice', 'audio', 'video', 'text', 'video_note', 'animation', 'sticker'):
+	for media_type in ('document', 'photo', 'voice', 'audio', 'video', 'video_note', 'animation', 'sticker'):
 		if media_types[media_type] == True and not os.path.exists(media_type):
 			os.mkdir(media_type)
 
@@ -176,18 +179,33 @@ def get_text        (message     ):
 	# Getting type of resource
 	global data
 	global date_string # To don't fuck with formatting twice
-	
-	with open('messages.txt', 'w') as file:
-		# If message was sent with a document attached
-		if message.media and message.caption != None:
-			file.write('{0}: {1}\n'.format(date_string, message.caption))
-		else:
-			file.write('{0}: {1}\n'.format(date_string, message.text))
 
+	if os.path.exists('messages.txt'):
+		with open('messages.txt', 'a') as file:
+			if message.media and message.caption != None:
+				file.write('{0}: {1}\n'.format(date_string, message.caption))
+			else:
+				file.write('{0}: {1}\n'.format(date_string, message.text))
+	else:
+		with open('messages.txt', 'w') as file:
+			if message.media and message.caption != None:
+				file.write('{0}: {1}\n'.format(date_string, message.caption))
+			else:
+				file.write('{0}: {1}\n'.format(date_string, message.text))
+def check_choise    (media_types ):
+	choise = False
 
-args     = sys.argv[1:]
+	for media_type in media_types:
+		if media_types[media_type] == True: choise = True
+
+	if choise == False: sys.exit('Error: Types of media to download are ommiting.')
+
+get_names = False
+count     = False
+
+args      = sys.argv[1:]
 process_flags(args)
-channels = get_channels(args)
+channels  = get_channels(args)
 
 app = auth()
 app.start()
@@ -226,12 +244,12 @@ for entity in channels:
 	os.chdir(path)
 
 	for message in app.iter_history(entity):
-		if message.media:
+		date_string = strftime('%Y-%m-%d (%H:%M)', localtime(message.date))
+		curr_date   = message.date
 
-			curr_date   = message.date
-			date_string = strftime('%Y-%m-%d (%H:%M)', localtime(message.date))
-		
-			if message.animation  and media_types['animation ']: get_media('animation ')
+		if message.media:		
+
+			if message.animation  and media_types['animation' ]: get_media('animation' )
 			if message.video_note and media_types['video_note']: get_media('video_note')
 			if message.document   and media_types['document'  ]: get_media('document'  )
 			if message.sticker    and media_types['sticker'   ]: get_media('sticker'   )			
@@ -240,9 +258,11 @@ for entity in channels:
 			if message.voice      and media_types['voice'     ]: get_media('voice'     )
 			if message.audio      and media_types['audio'     ]: get_media('audio'     )
 
-			prev_date = curr_date
-		if media_types['text']: get_text(message)
-
+		if media_types['text']:
+			get_text (message)
+			downloaded = 0
+		
+		prev_date = curr_date
 
 	if count:
 		print('Total file amount:', amount)
