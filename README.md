@@ -1,5 +1,13 @@
-# tg_grabber
+# tg_grabber \[development branch\]
 File grabber for Telegram.
+
+## TODO:
+0. Debug text processing: checking dowlnoaded data, prettifying the output and excluding that annoying `None` (wrong media type I bet);
+1. Unarchive downloaded archives: I shall use UNIX tools (fuck porting, huh?);
+2. Code a bot for remote downloads: In progress, but tool first;
+3. Optimize it somehow
+4. Pack some binaries
+5. Make some profiles to avoid getting private API data 
 
 ## DESCRIPTION:
 Script for getting documents from Telegram channels/groups.
@@ -29,16 +37,29 @@ You can make the script executable by:
 
 `--count (-c)` -- count up channel's/chat's documents;
 
+### Available data types:
+`--animation (-m)` -- Animation;
+
+`--audio (-a)` -- Audio tracks;
+
+`--documents (-d)` -- Documents (other files);
+
+`--photo (-p)` -- Images;
+
+`--stickers (-s)` -- Stickers;
+
+`--text (-t)` -- Plain text (whether a caption or a simple message);
+
+`--video (-v)` -- Videos;
+
+`--videonotes (-N)` -- Video messages;
+
+`--voice (-V)` -- Voice messages;
+
+`--all (-A)` -- Everything from specified above;
+
 ## DEPENDENCIES:
 
 * `pyrogram`
 * `tgcrypto`
 * `termcolor`
-
-## TODO:
-0. Add modes to download messages and media
-1. Unarchive downloaded archives
-2. Code a bot for remote downloads
-3. Optimize it somehow
-4. Pack some binaries
-5. Make some profiles to avoid getting private API data 
