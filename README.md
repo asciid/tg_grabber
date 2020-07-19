@@ -13,8 +13,8 @@ File grabber for Telegram.
 Script for getting documents from Telegram channels/groups.
 
 ## AUTH:
-Grabber uses MTProto to act like a userbot so you have to:
-1. Go to my.telegram.org and login
+Grabber uses MTProto to act like a regular third-party Telegram app so you have to register it as an application:
+1. Go to my.telegram.org and login 
 2. Create new app in 'API development tools'
 3. Get `api_id` and `api_hash` and paste in when script asks for them
 
