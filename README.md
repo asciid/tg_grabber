@@ -7,8 +7,9 @@ File grabber for Telegram.
 2. Code a bot for remote downloads: In progress, but tool first;
 3. Optimize it somehow
 4. Pack some binaries
-5. Make some profiles to avoid getting private API data 
-
+5. Make some profiles to avoid getting private API data
+6. Make `joinchat` links processible
+ 
 ## DESCRIPTION:
 Script for getting documents from Telegram channels/groups.
 
