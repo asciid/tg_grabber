@@ -1,5 +1,5 @@
 # tg_grabber \[development branch\]
-File grabber for Telegram.
+Data grabber for Telegram.
 
 ## TODO:
 0. Debug text processing: checking dowlnoaded data, prettifying the output and excluding that annoying `None` (wrong media type I bet);
@@ -11,13 +11,15 @@ File grabber for Telegram.
 6. Make `joinchat` links processible
  
 ## DESCRIPTION:
-Script for getting documents from Telegram channels/groups.
+Script for getting data from Telegram channels or groups.
 
 ## AUTH:
 Grabber uses MTProto to act like a regular third-party Telegram app so you have to register it as an application:
 1. Go to my.telegram.org and login 
 2. Create new app in 'API development tools'
 3. Get `api_id` and `api_hash` and paste in when script asks for them
+
+Thinking about a method to use one of pre-built API configs. In progress and TODO actually.
 
 ## USAGE:
 `python3 download.py CHANNEL(s) [FLAGS]`
