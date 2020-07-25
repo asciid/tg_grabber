@@ -1,17 +1,6 @@
 # tg_grabber \[development branch\]
 Data grabber for Telegram.
 
-// Fuck. I need some time to make it better. Temporary stopped.
-
-## TODO:
-0. Debug text processing: checking dowlnoaded data, prettifying the output and excluding that annoying `None` (wrong media type I bet);
-1. Unarchive downloaded archives: I shall use UNIX tools (fuck porting, huh?);
-2. Code a bot for remote downloads: In progress, but tool first;
-3. Optimize it somehow
-4. Pack some binaries
-5. Make some profiles to avoid getting private API data
-6. Make `joinchat` links processible
- 
 ## DESCRIPTION:
 Script for getting data from Telegram channels or groups.
 
