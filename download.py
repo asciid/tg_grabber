@@ -4,22 +4,22 @@ from termcolor import colored
 from time      import localtime, strftime
 from mimetypes import guess_extension
 import sys
+import re
 import os
 
-"""
-                [   TODO   ]
-[ 2. CODE PRETTIFYING                       ]
-[ 3. REGISTERED PROFILES // PROFILE FARMING ]
-"""
+###
+### Нужен рефракторинг всего кода
+### Это пиздец
+###
 
 help_msg = """USAGE: ./download.py channel(s) DATA_TYPES [OPTION(S)]
 
 OPTIONS:
 [--help    | -h] => Print this message and exit.
-[--cleanup | -c] => Clear the vault and exit.
+[--count   | -c] => Simply count up all the chat/channel's documents.
 [--names   | -n] => Iterate through the chat/channel and print file names with no downloads.
+[--cleanup     ] => Clear the vault and exit.
 [--nocolor     ] => Disable colored output.
-[--count       ] => Simply count up all the chat/channel's documents.
 
 DATA TYPES:
 Grabber can download any of following types of data. You can combine them by combining flags.
@@ -53,7 +53,7 @@ media_types = {
 	'voice'       : False
 }
 
-def auth            ():
+def auth            (                  ):
 	if os.path.exists('grabber.ini'):
 		return Client(session_name='grabber', config_file='grabber.ini')
 	else:
@@ -69,35 +69,26 @@ def auth            ():
 
 		print('grabber.ini config file has been created.')
 		return Client(session_name='grabber', api_id=api_id, api_hash=api_hash)
-def get_channels    (argv):
-	channels = []
-
-	for argument in argv:
-		if not argument.startswith('-'):
-			if argument.startswith('@'): channels.append(argument[1:])
-			else: channels.append(argument)
-
-	if len(channels) == 0:
-		sys.exit('Error: Chat or channel to download is omitting.\nRun ./download.py -h for some info.')
-	else:
-		return channels
-def process_flags   (argv):
-
+def process_flags   (                  ):
 	global media_types
 	global count
 	global get_names
 	global help_msg
+	argv = sys.argv[1:]
 	choise = False
 
 	if '--cleanup' in argv:
 		confirmation = input('This action wipes all stored data. Are you sure? [y/n]: ')
-		if confirmation.lower() == 'y': os.system('rm -rf vault/ amount.txt output.txt')
-
-		sys.exit()
+		if    confirmation.lower() == 'y': 
+			os.system('rm -rf vault/ amount.txt output.txt')
+			msg = 'Done!'
+		else: msg = 'Shutdown'
+		sys.exit(msg)
+	
 	if '--nocolor' in argv: colored = lambda a, b, **c: a
 	if '-h' in argv or '--help'       in argv: sys.exit(help_msg)
-	if '-c' in argv or '--count'      in argv: media_types['count'      ] = True
-	if '-n' in argv or '--names'      in argv: media_types['get_names'  ] = True
+	if '-c' in argv or '--count'      in argv: count                      = True
+	if '-n' in argv or '--names'      in argv: get_names                  = True
 	if '-m' in argv or '--animation'  in argv: media_types['animation'  ] = True
 	if '-a' in argv or '--audio'      in argv: media_types['audio'      ] = True
 	if '-d' in argv or '--documents'  in argv: media_types['document'   ] = True
@@ -111,7 +102,30 @@ def process_flags   (argv):
 		for media_type in media_types: media_types[media_type] = True
 
 	check_choise(media_types)
-def process_folders (channel_name):
+def check_choise    (media_types       ):
+	choise = False
+
+	for media_type in media_types:
+		if media_types[media_type] == True: choise = True
+
+	if choise == False: sys.exit('Error: Types of media to download are ommiting.')
+def get_channels    (                  ):
+	channels = []
+	argv = sys.argv[1:]
+
+	for argument in argv:
+		if not argument.startswith('-'):
+			if argument.startswith('@'): channels.append(argument[1:])
+			else: channels.append(argument)
+
+			#if argument.startswith('https://t.me/joinchat'):
+			#	channels.append(argument)
+
+	if len(channels) == 0:
+		sys.exit('Error: Chat or channel to download is omitting.\nRun ./download.py -h for some info.')
+	else:
+		return channels
+def process_folders (channel_name      ):
 	global media_types
 
 	path = 'vault/' + channel_name
@@ -126,10 +140,11 @@ def process_folders (channel_name):
 			os.mkdir(media_type)
 
 	os.chdir('../../')
-def get_media       (data_type   ):
+def get_media       (message, data_type):
 	
 	global date_string
 	global copies
+
 	document = False
 	skip     = False
 
@@ -172,45 +187,68 @@ def get_media       (data_type   ):
 				print(colored("[{}] [{:10}]".format(date_string, data_type), 'yellow'), colored('Downloading:', 'green'), file_name + ext)
 				message.download(file_name=full_path)
 				downloaded += 1
-def get_text        (message     ):
+def get_text        (message           ):
 	# File is open at the root of the chat's media folder
-	# Check out the line 
+	# Check out the line XXX
 
 	# Getting type of resource
 	global data
 	global date_string # To don't fuck with formatting twice
+	global downloaded # Let it be
+	text = ""
+	global last_ID
 
 	if os.path.exists('messages.txt'):
-		with open('messages.txt', 'a') as file:
-			if message.media and message.caption != None:
-				file.write('{0}: {1}\n'.format(date_string, message.caption))
-			else:
-				file.write('{0}: {1}\n'.format(date_string, message.text))
+		mode = 'a'
 	else:
-		with open('messages.txt', 'w') as file:
-			if message.media and message.caption != None:
-				file.write('{0}: {1}\n'.format(date_string, message.caption))
-			else:
-				file.write('{0}: {1}\n'.format(date_string, message.text))
-def check_choise    (media_types ):
-	choise = False
+		mode = 'w'
 
-	for media_type in media_types:
-		if media_types[media_type] == True: choise = True
+	with open('messages.txt', mode) as file:
+		if message.media and message.caption != None: text = message.caption
+		elif not message.media: text = message.text
 
-	if choise == False: sys.exit('Error: Types of media to download are ommiting.')
+		msg_ID = message.message_id
 
-get_names = False
+		if text == None or text == '':
+			pass
+		elif last_ID >= msg_ID:
+			pass
+		else:
+			file.write('[{0}] {1}: {2}\n'.format(message.message_id, date_string, text))
+			downloaded += 1
+			print(colored('[{}]'.format(date_string), 'yellow'), text)
+def get_latest_id   (                  ):
+	with open('messages.txt', 'r') as file:
+		content = file.readlines()
+		content.reverse()
+		var = 0
+		for line in content:
+			ID = re.match(r'\[\d*\]', line)
+			if ID:
+				var = ID.group(0)
+				var = int(var[1:-1])
+				break
+				# This means actually that is no break needed
+				# Loop just returns you this number when it finds it
+		return var
+def store_link      (entity            ):
+	
+	if os.path.exists('.resources'): mode = 'a'
+	else:                            mode = 'w'
+
+	with open('.resources', mode) as file:
+		file.write(entity + '\n')
+
 count     = False
-
-args      = sys.argv[1:]
-process_flags(args)
-channels  = get_channels(args)
+get_names = False
+process_flags()
+channels  = get_channels()
 
 app = auth()
 app.start()
 
 for entity in channels:
+	in_chat = False
 	try:
 		data = app.get_chat(entity)
 
@@ -226,7 +264,8 @@ for entity in channels:
 
 	downloaded = 0
 	amount     = 0
-	path       = os.getcwd() + '/vault/' + entity + '/'
+
+	path   = os.getcwd() + '/vault/' + entity   + '/'
 
 	if not count and not get_names:
 		process_folders(entity)
@@ -236,36 +275,46 @@ for entity in channels:
 			print(colored('{} ({})'.format(entity, data.title), 'magenta', attrs=['bold']))
 		else:
 			print(colored('{} ({}): {}'.format(entity, data.title, data.description), 'magenta', attrs=['bold']))
+		
+	os.chdir(path)
 
 	prev_date = 0
 	curr_date = 0
 	copies    = 0
 
-	os.chdir(path)
+	last_ID   = 0
 
-	for message in app.iter_history(entity):
+
+	if media_types['text'] and os.path.exists('messages.txt'):
+		last_ID = get_latest_id()
+
+	for message in app.iter_history(entity, reverse=True):
+
 		date_string = strftime('%Y-%m-%d (%H:%M)', localtime(message.date))
 		curr_date   = message.date
 
 		if message.media:		
 
-			if message.animation  and media_types['animation' ]: get_media('animation' )
-			if message.video_note and media_types['video_note']: get_media('video_note')
-			if message.document   and media_types['document'  ]: get_media('document'  )
-			if message.sticker    and media_types['sticker'   ]: get_media('sticker'   )			
-			if message.photo      and media_types['photo'     ]: get_media('photo'     )
-			if message.video      and media_types['video'     ]: get_media('video'     )
-			if message.voice      and media_types['voice'     ]: get_media('voice'     )
-			if message.audio      and media_types['audio'     ]: get_media('audio'     )
+			if message.animation  and media_types['animation' ]: get_media(message, 'animation' )
+			if message.video_note and media_types['video_note']: get_media(message, 'video_note')
+			if message.document   and media_types['document'  ]: get_media(message, 'document'  )
+			if message.sticker    and media_types['sticker'   ]: get_media(message, 'sticker'   )			
+			if message.photo      and media_types['photo'     ]: get_media(message, 'photo'     )
+			if message.video      and media_types['video'     ]: get_media(message, 'video'     )
+			if message.voice      and media_types['voice'     ]: get_media(message, 'voice'     )
+			if message.audio      and media_types['audio'     ]: get_media(message, 'audio'     )
 
-		if media_types['text']:
-			get_text (message)
-			downloaded = 0
-		
+		if media_types['text']: get_text (message)
+			
+			
 		prev_date = curr_date
 
 	if count:
-		print('Total file amount:', amount)
+		if count != 0:
+			print('Total file amount:', amount)
+		elif count == 0:
+			print('Channel has no specified entities.')
+
 	elif not get_names:
 		if downloaded == 0:
 			print('Resource is already stored.')
@@ -273,5 +322,7 @@ for entity in channels:
 			print('Files proceed:', downloaded)
 
 	os.chdir('../../')
+
+	store_link(entity)
 
 app.stop()
